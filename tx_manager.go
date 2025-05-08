@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 )
 
 type User struct {
@@ -66,11 +67,11 @@ func (tm *TxManager) SaveAuditLogRequiresNew(ctx context.Context, userID string)
 }
 
 // NOT_SUPPORTED
-func FetchConfigNotTransactional(ctx context.Context, exec DBExecutor) error {
+func (tm *TxManager) FetchConfigNotTransactional(ctx context.Context, exec DBExecutor) error {
 	if _, ok := exec.(*sql.Tx); ok {
-		return errors.New("NOT_SUPPORTED: transaction not allowed")
+		fmt.Println("NOT_SUPPORTED: transaction not allowed, will not use the transaction")
 	}
-	_, err := exec.QueryContext(ctx, "SELECT key, value FROM config")
+	_, err := tm.DB.QueryContext(ctx, "SELECT key, value FROM config")
 	return err
 }
 
@@ -79,6 +80,7 @@ func HealthCheckNeverTransactional(ctx context.Context, exec DBExecutor) error {
 	if _, ok := exec.(*sql.Tx); ok {
 		return errors.New("NEVER: transaction not allowed")
 	}
+	//_, err := exec.ExecContext(ctx, "SELECT 1")
 	return nil
 }
 
